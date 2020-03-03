@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:rxdart/rxdart.dart';
+import 'home_store.dart';
+import 'dart:async';
 
 void main() => runApp(MyApp());
 
@@ -20,13 +23,13 @@ class MyApp extends StatelessWidget {
         // is not restarted.
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      home: MyHomePage(title: 'Flutter Demo Home Page', store: HomeStore.shared),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  MyHomePage({Key key, this.title}) : super(key: key);
+  MyHomePage({Key key, this.title, this.store}) : super(key: key);
 
   // This widget is the home page of your application. It is stateful, meaning
   // that it has a State object (defined below) that contains fields that affect
@@ -38,23 +41,27 @@ class MyHomePage extends StatefulWidget {
   // always marked "final".
 
   final String title;
+  final HomeStore store;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState(store);
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  int _counter;
+  HomeStore _store;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
+  _MyHomePageState(HomeStore store) {
+    this._store = store;
+    _store.counter.stream.listen((value) {
+      setState(() {
+        _counter = value;
+      });
     });
+  }
+
+  void _incrementCounter({int increment = 1}) {
+    _store.counter.add(_counter + increment);
   }
 
   @override
@@ -98,6 +105,12 @@ class _MyHomePageState extends State<MyHomePage> {
               '$_counter',
               style: Theme.of(context).textTheme.display1,
             ),
+            RaisedButton(
+              child: Text("You can increment the above number much more."),
+              onPressed: () {
+                _incrementCounter(increment: 65535);
+              },
+            )
           ],
         ),
       ),
